@@ -1,0 +1,2 @@
+rootProject.name = "hardware-core"
+
