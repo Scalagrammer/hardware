@@ -72,8 +72,8 @@ class Parser(private val tokens : MutableList<Token>) {
             throw ParseException("within .define section labels are disabled", pos)
         }
 
-        this += with(nextId()) {
-            value to (position - labelsOffset)
+        with(nextId()) {
+            this@acceptLabel += value to (position - labelsOffset)
         }.also {
             labelsOffset += 1
         }

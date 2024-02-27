@@ -2,6 +2,4 @@ package scg.hardware.assembler.state
 
 import scg.hardware.assembler.model.Hardware
 
-interface ExternalCall<H : Hardware<H>> : Instruction<H> {
-    val label : Label
-}
+abstract class ExternalCall<H : Hardware<H>>(val label : Label) : Instruction<H>

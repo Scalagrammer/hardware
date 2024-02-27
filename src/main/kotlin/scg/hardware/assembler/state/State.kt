@@ -14,7 +14,7 @@ import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.atomic.AtomicBoolean
 
 typealias Action = () -> Unit
-typealias Label = Pair<String, Int>
+typealias Label = String
 
 interface State<H : Hardware<H>> {
 
@@ -48,7 +48,7 @@ interface State<H : Hardware<H>> {
 
     operator fun plusAssign(call : ExternalCall<H>)
     operator fun plusAssign(instruction : Instruction<H>)
-    operator fun plusAssign(label : Label)
+    operator fun plusAssign(indexedLabel : Pair<Label, Int>)
 
     fun usr(regName : String, action : (UInt?) -> Unit)
 
@@ -60,6 +60,7 @@ class Interpreter<H : Hardware<H>> : State<H>, Program<H> {
 
     private val started = AtomicBoolean(false)
 
+    private var externalCallIndex = -1
 
     private val regs = HashMap<String, Reg>()
 
@@ -206,28 +207,36 @@ class Interpreter<H : Hardware<H>> : State<H>, Program<H> {
 
     }
 
-    override fun plusAssign(label : Label) {
-
-        if (started.get()) throw IllegalStateException("can not define label='${label.first}' after the interpreter has been started")
-
-        lbls += label
-    }
-
     override fun plusAssign(instruction : Instruction<H>) {
 
         if (started.get()) throw IllegalStateException("can not define instruction after the interpreter has been started")
 
         instructions += instruction
+
+    }
+
+    override fun plusAssign(indexedLabel : Pair<Label, Int>) {
+
+        val (label, index) = indexedLabel
+
+        if (started.get()) throw IllegalStateException("can not define label=$label after the interpreter has been started")
+
+        if (label in lbls) throw IllegalStateException("label $label is already defined")
+
+        lbls[label] = index
+
     }
 
     override fun plusAssign(call : ExternalCall<H>) {
-        if (started.get()) throw IllegalStateException("can not define external call for label='${call.label.first}' after the interpreter has been started")
 
-        val label = call.label
+        if (started.get()) throw IllegalStateException("can not define external call for label='${call.label}' after the interpreter has been started")
 
-        plusAssign(label)
+        externalCallIndex -= 1
 
-        externalCalls[label.second] = call
+        lbls += call.label to externalCallIndex
+
+        externalCalls[externalCallIndex] = call
+
     }
 
     private val withFreeResources : AutoCloseable

@@ -69,12 +69,7 @@ class Reg(initial : UInt? = null) : Iterable<UInt>, Cell {
             for (b in br) action(a, b)
         }
 
-        fun collect(ar : Reg, br : Reg, cr : Reg, dr : Reg, action : (List<UInt>) -> Unit) {
-            for (a in ar)
-            for (b in br)
-            for (c in cr)
-            for (d in dr) action(listOf(a, b, c, d))
-        }
+        fun collect(vararg regs : Reg, action : (List<UInt>) -> Unit) = regs.mapNotNull { it.value }.let { action(it) }
 
     }
 }
